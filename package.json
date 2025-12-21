@@ -1,0 +1,17 @@
+{
+  "name": "tax-tool",
+  "version": "0.1.0",
+  "description": "A command-line tool for tracking income and expenses for 1099 employees to simplify tax filing.",
+  "license": "ISC",
+  "author": "Erik Muir",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
