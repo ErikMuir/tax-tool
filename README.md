@@ -64,4 +64,5 @@ A command-line tool for tracking income and expenses for 1099 employees to simpl
 - Support the user being able to run a report for a given quarter (and year)
 
 #### Exports
+
 - Support the user being able to export any of the reports (as .xlsx?)
