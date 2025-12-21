@@ -6,10 +6,10 @@ A command-line tool for tracking income and expenses for 1099 employees to simpl
 
 ### Scaffolding
 
-#### Command-Line Parsing
+#### ~~Command-Line Parsing~~
 
-- Establish patterns for parsing commands, arguments, and options
-- Construct help text (unless it comes for free from a library)
+- ~~Establish patterns for parsing commands, arguments, and options~~
+- ~~Construct help text (unless it comes for free from a library)~~
 
 #### Persistence
 
