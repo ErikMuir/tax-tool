@@ -11,10 +11,10 @@ A command-line tool for tracking income and expenses for 1099 employees to simpl
 - ~~Establish patterns for parsing commands, arguments, and options~~
 - ~~Construct help text (unless it comes for free from a library)~~
 
-#### Persistence
+#### ~~Persistence~~
 
-- Establish patterns for data persistence (json files?)
-- Create a repository layer for interacting with data in a consistent manner
+- ~~Establish patterns for data persistence (json files?)~~
+- ~~Create a repository layer for interacting with data in a consistent manner~~
 
 #### Custom Logger
 

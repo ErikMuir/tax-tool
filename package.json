@@ -11,7 +11,7 @@
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "test": "npm run build && node --test 'tests/**/*.test.ts'",
-    "test:unit": "npm run build && node --test 'tests/config/*.test.ts'",
+    "test:unit": "npm run build && node --test 'tests/config/*.test.ts' 'tests/data/*.test.ts'",
     "test:integration": "npm run build && node --test tests/index.test.ts",
     "test:watch": "node --test --watch 'tests/**/*.test.ts'",
     "lint": "eslint .",
