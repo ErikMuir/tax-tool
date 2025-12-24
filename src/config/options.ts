@@ -7,6 +7,7 @@ export const optionDefinitions: OptionDefinition[] = [
     alias: "h",
     type: Boolean,
     description: "Display this usage guide.",
+    defaultValue: false,
   },
 ];
 

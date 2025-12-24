@@ -1,5 +1,5 @@
 import fs from "fs";
-import { Category, Entry, EntryType, Model } from "./models.js";
+import { Category, Entry, EntryType, BaseModel } from "./models.js";
 
 const CATEGORY_DATA_PATH = "./categories.json";
 const ENTRY_DATA_PATH = "./entries.json";
@@ -21,15 +21,15 @@ export class Repo {
     return this.entries.filter((entry) => entry.type === type);
   }
 
-  private load<Model>(path: string): Model[] {
+  private load<T extends BaseModel>(path: string): T[] {
     if (!fs.existsSync(path)) {
       fs.writeFileSync(path, JSON.stringify([], null, 2));
     }
     const dataJson = fs.readFileSync(path, "utf-8");
-    const data = JSON.parse(dataJson);
+    const data: unknown = JSON.parse(dataJson);
     if (!Array.isArray(data)) {
       throw new Error(`${path}: data is corrupt!`);
     }
-    return data as Model[];
+    return data as T[];
   }
 }

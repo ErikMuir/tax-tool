@@ -1,17 +1,17 @@
 
 export type EntryType = "Income" | "Expense";
 
-export type Category = {
+export type BaseModel = object;
+
+export type Category = BaseModel & {
   type: EntryType;
   name: string;
 }
 
-export type Entry = {
+export type Entry = BaseModel & {
   date: string; // ISO date string
   type: EntryType;
   category: string;
   amount: number; // in dollars
   notes?: string;
 }
-
-export type Model = Category | Entry;
