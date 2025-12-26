@@ -20,11 +20,7 @@ describe("usage", () => {
     it("should include the description", () => {
       const usage = getUsage();
 
-      assert.ok(
-        usage.includes(
-          "For tracking 1099 income/expenses to simplify tax filing."
-        )
-      );
+      assert.ok(usage.includes("For tracking 1099 income/expenses to simplify tax filing."));
     });
 
     it("should include Options section", () => {

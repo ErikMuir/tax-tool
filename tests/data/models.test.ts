@@ -40,6 +40,7 @@ describe("models", () => {
   describe("Entry", () => {
     it("should have correct shape with required fields", () => {
       const entry: Entry = {
+        id: "entry-1",
         date: "2025-01-15",
         type: "Income",
         category: "Consulting",
@@ -55,6 +56,7 @@ describe("models", () => {
 
     it("should support optional notes field", () => {
       const entry: Entry = {
+        id: "entry-2",
         date: "2025-01-15",
         type: "Expense",
         category: "Office Supplies",

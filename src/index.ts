@@ -1,13 +1,14 @@
 import { getOptions } from "./config/options.js";
 import { getUsage } from "./config/usage.js";
+import { mainMenu } from "./menus/main.js";
 import { UserInterface } from "./utils/user-interface.js";
 
 const ui = new UserInterface();
 const options = getOptions();
 
 // Set up cleanup handlers
-process.on('exit', () => ui.dispose());
-process.on('SIGINT', () => {
+process.on("exit", () => ui.dispose());
+process.on("SIGINT", () => {
   ui.dispose();
   process.exit(130);
 });
@@ -23,5 +24,10 @@ if (options.help) {
 // Display parsed options for confirmation
 ui.write(`options: ${JSON.stringify(options)}`);
 
-// Clean up
-ui.dispose();
+try {
+  await mainMenu(ui);
+} catch (err) {
+  ui.error(`An unexpected error occurred: ${(err as Error).message}`);
+} finally {
+  ui.dispose();
+}

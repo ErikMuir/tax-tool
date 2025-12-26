@@ -1,14 +1,12 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert";
 import fs from "fs";
-import path from "path";
 import { Repo } from "../../dist/data/repo.js";
 import type { Category, Entry } from "../../dist/data/models.js";
 
 describe("Repo", () => {
   const testCategoriesPath = "./test-categories.json";
   const testEntriesPath = "./test-entries.json";
-  const originalCwd = process.cwd();
 
   beforeEach(() => {
     // Clean up any existing test files
@@ -65,10 +63,7 @@ describe("Repo", () => {
         { type: "Expense", name: "Office Supplies" },
       ];
 
-      fs.writeFileSync(
-        "./categories.json",
-        JSON.stringify(categories, null, 2)
-      );
+      fs.writeFileSync("./categories.json", JSON.stringify(categories, null, 2));
       fs.writeFileSync("./entries.json", JSON.stringify([], null, 2));
 
       const repo = new Repo();
@@ -85,12 +80,14 @@ describe("Repo", () => {
     it("should load existing entries from file", () => {
       const entries: Entry[] = [
         {
+          id: "entry-1",
           date: "2025-01-15",
           type: "Income",
           category: "Consulting",
           amount: 5000.0,
         },
         {
+          id: "entry-2",
           date: "2025-01-16",
           type: "Expense",
           category: "Office Supplies",
@@ -124,10 +121,7 @@ describe("Repo", () => {
       fs.writeFileSync("./categories.json", '{"not": "an array"}');
       fs.writeFileSync("./entries.json", JSON.stringify([], null, 2));
 
-      assert.throws(
-        () => new Repo(),
-        /\.\/categories\.json: data is corrupt!/
-      );
+      assert.throws(() => new Repo(), /\.\/categories\.json: data is corrupt!/);
     });
 
     it("should throw error if entries file contains invalid JSON", () => {
@@ -165,10 +159,7 @@ describe("Repo", () => {
         { type: "Expense", name: "Travel" },
       ];
 
-      fs.writeFileSync(
-        "./categories.json",
-        JSON.stringify(categories, null, 2)
-      );
+      fs.writeFileSync("./categories.json", JSON.stringify(categories, null, 2));
       fs.writeFileSync("./entries.json", JSON.stringify([], null, 2));
 
       const repo = new Repo();
@@ -188,10 +179,7 @@ describe("Repo", () => {
         { type: "Expense", name: "Travel" },
       ];
 
-      fs.writeFileSync(
-        "./categories.json",
-        JSON.stringify(categories, null, 2)
-      );
+      fs.writeFileSync("./categories.json", JSON.stringify(categories, null, 2));
       fs.writeFileSync("./entries.json", JSON.stringify([], null, 2));
 
       const repo = new Repo();
@@ -219,24 +207,28 @@ describe("Repo", () => {
     it("should filter entries by Income type", () => {
       const entries: Entry[] = [
         {
+          id: "entry-1",
           date: "2025-01-15",
           type: "Income",
           category: "Consulting",
           amount: 5000.0,
         },
         {
+          id: "entry-2",
           date: "2025-01-16",
           type: "Income",
           category: "Freelance",
           amount: 3000.0,
         },
         {
+          id: "entry-3",
           date: "2025-01-17",
           type: "Expense",
           category: "Office Supplies",
           amount: 150.5,
         },
         {
+          id: "entry-4",
           date: "2025-01-18",
           type: "Expense",
           category: "Travel",
@@ -259,24 +251,28 @@ describe("Repo", () => {
     it("should filter entries by Expense type", () => {
       const entries: Entry[] = [
         {
+          id: "entry-1",
           date: "2025-01-15",
           type: "Income",
           category: "Consulting",
           amount: 5000.0,
         },
         {
+          id: "entry-2",
           date: "2025-01-16",
           type: "Income",
           category: "Freelance",
           amount: 3000.0,
         },
         {
+          id: "entry-3",
           date: "2025-01-17",
           type: "Expense",
           category: "Office Supplies",
           amount: 150.5,
         },
         {
+          id: "entry-4",
           date: "2025-01-18",
           type: "Expense",
           category: "Travel",
@@ -299,6 +295,7 @@ describe("Repo", () => {
     it("should preserve all entry fields including notes", () => {
       const entries: Entry[] = [
         {
+          id: "entry-1",
           date: "2025-01-15",
           type: "Income",
           category: "Consulting",

@@ -13,7 +13,7 @@ export default [
   },
 
   {
-    ignores: ["dist/*"],
+    ignores: ["dist/*", "tests/**"],
   },
 
   // Apply type-checked rules WITH type info available

@@ -11,10 +11,7 @@ describe("options", () => {
       assert.strictEqual(helpOption.name, "help");
       assert.strictEqual(helpOption.alias, "h");
       assert.strictEqual(helpOption.type, Boolean);
-      assert.strictEqual(
-        helpOption.description,
-        "Display this usage guide."
-      );
+      assert.strictEqual(helpOption.description, "Display this usage guide.");
     });
 
     it("should export an array of option definitions", () => {

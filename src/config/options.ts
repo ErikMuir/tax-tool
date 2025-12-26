@@ -9,6 +9,13 @@ export const optionDefinitions: OptionDefinition[] = [
     description: "Display this usage guide.",
     defaultValue: false,
   },
+  {
+    name: "debug",
+    alias: "d",
+    type: Boolean,
+    description: "Enable debug output.",
+    defaultValue: false,
+  },
 ];
 
 let options: CommandLineOptions | undefined;
