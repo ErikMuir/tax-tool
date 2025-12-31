@@ -1,9 +1,9 @@
 import { getOptions } from "./config/options.js";
 import { getUsage } from "./config/usage.js";
 import { mainMenu } from "./menus/main.js";
-import { UserInterface } from "./utils/user-interface.js";
+import { getUserInterface } from "./utils/user-interface.js";
 
-const ui = new UserInterface();
+const ui = getUserInterface();
 const options = getOptions();
 
 // Set up cleanup handlers
@@ -25,7 +25,7 @@ if (options.help) {
 ui.write(`options: ${JSON.stringify(options)}`);
 
 try {
-  await mainMenu(ui);
+  await mainMenu();
 } catch (err) {
   ui.error(`An unexpected error occurred: ${(err as Error).message}`);
 } finally {

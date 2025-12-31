@@ -1,20 +1,36 @@
 import * as readline from "readline";
-import { MenuOption, MenuOptions } from "./menu.js";
+import { ActionType, MenuOption, MenuOptions } from "../menus/shared.js";
 
-export const Colors: Record<string, string> = {
+export type Color = "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "grey";
+
+export const ColorCodes: Record<Color, string> = {
   red: "\x1b[31m",
   green: "\x1b[32m",
-  blue: "\x1b[34m",
   yellow: "\x1b[33m",
+  blue: "\x1b[34m",
   magenta: "\x1b[35m",
   cyan: "\x1b[36m",
   white: "\x1b[37m",
   grey: "\x1b[90m",
 };
 
-export class UserInterface {
+export type WriteOptions = {
+  color?: Color | undefined;
+  inline?: boolean | undefined;
+};
+
+export const inline: WriteOptions = { inline: true };
+
+let userInterface: UserInterface | null = null;
+export function getUserInterface(): UserInterface {
+  if (!userInterface) {
+    userInterface = new UserInterface();
+  }
+  return userInterface;
+}
+
+class UserInterface {
   private NC: string = "\x1b[0m";
-  private currentColor?: string | undefined;
   private rl: readline.Interface;
   private disposed = false;
 
@@ -31,45 +47,33 @@ export class UserInterface {
     this.disposed = true;
   }
 
-  setColor = (color: keyof typeof Colors): UserInterface => {
-    this.currentColor = Colors[color];
+  write = (data: string | object, options: WriteOptions = {}): UserInterface => {
+    if (typeof data !== "string") data = JSON.stringify(data);
+    if (options.color) data = `${ColorCodes[options.color]}${data}${this.NC}`;
+    if (!options.inline) data += "\n";
+    process.stdout.write(data);
     return this;
-  };
+  }
 
-  resetColor = (): UserInterface => {
-    this.currentColor = undefined;
-    return this;
-  };
+  info = (data: string | object, inline?: boolean): UserInterface => {
+    return this.write(data, { color: "cyan", inline });
+  }
 
-  log = (data: string | object): UserInterface => {
-    this._write(data, Colors.grey);
-    return this;
-  };
+  success = (data: string | object, inline?: boolean): UserInterface => {
+    return this.write(data, { color: "green", inline });
+  }
 
-  write = (data: string | object, preventNewline: boolean = false): UserInterface => {
-    this._write(data, this.currentColor, preventNewline);
-    return this;
-  };
+  warning = (data: string | object, inline?: boolean): UserInterface => {
+    return this.write(data, { color: "yellow", inline });
+  }
 
-  info = (data: string | object, preventNewline: boolean = false): UserInterface => {
-    this._write(data, Colors.cyan, preventNewline);
-    return this;
-  };
+  error = (data: string | object, inline?: boolean): UserInterface => {
+    return this.write(data, { color: "red", inline });
+  }
 
-  success = (data: string | object, preventNewline: boolean = false): UserInterface => {
-    this._write(data, Colors.green, preventNewline);
-    return this;
-  };
-
-  warn = (data: string | object, preventNewline: boolean = false): UserInterface => {
-    this._write(data, Colors.yellow, preventNewline);
-    return this;
-  };
-
-  error = (data: string | object, preventNewline: boolean = false): UserInterface => {
-    this._write(data, Colors.red, preventNewline);
-    return this;
-  };
+  log = (data: string | object, inline?: boolean): UserInterface => {
+    return this.write(data, { color: "grey", inline });
+  }
 
   lineFeed = (lineCount: number = 1): UserInterface => {
     for (let i = 0; i < lineCount; i++) {
@@ -78,13 +82,9 @@ export class UserInterface {
     return this;
   };
 
-  separator = (preventNewline: boolean = false): UserInterface => {
-    return this.info("» ", true).success("» ", true).warn("» ", true).error("» ", preventNewline);
-  };
-
   continue = async (message = "Press Enter to continue..."): Promise<UserInterface> => {
     this._ensureNotDisposed();
-    this.write(message, true);
+    this.lineFeed().write(message, { inline: true });
     return new Promise((resolve) => {
       this.rl.once("line", () => {
         resolve(this);
@@ -95,7 +95,7 @@ export class UserInterface {
   confirm = async (message: string, defaultOption: boolean): Promise<boolean> => {
     this._ensureNotDisposed();
     const options = defaultOption ? "[Y/n]" : "[y/N]";
-    this.write(`${message} ${options}: `, true);
+    this.write(`${message} ${options}: `, inline);
     return new Promise((resolve) => {
       this.rl.once("line", (line) => {
         const response = line.trim().toLowerCase() || (defaultOption ? "y" : "n");
@@ -106,7 +106,8 @@ export class UserInterface {
 
   prompt = async (message: string): Promise<string> => {
     this._ensureNotDisposed();
-    this.write(`${message}: `, true);
+    const normalizedMessage = this._normalizePromptMessage(message);
+    this.write(`${normalizedMessage}: `, inline);
     return new Promise((resolve) => {
       this.rl.once("line", (line) => {
         resolve(line.trim());
@@ -114,36 +115,71 @@ export class UserInterface {
     });
   };
 
-  menu = async (message: string, options: MenuOptions): Promise<MenuOption> => {
+  choose = async (message: string, choices: string[]): Promise<string> => {
     this._ensureNotDisposed();
-    this.lineFeed().write(message);
-    for (const [key, opt] of Object.entries(options)) {
-      this.info(`  ${key} -> `, true).write(opt.name);
+    const normalizedMessage = this._normalizePromptMessage(message);
+    choices.forEach((choice, index) => {
+      this
+        .lineFeed()
+        .write(`  ${index + 1}`, { color: "cyan", inline: true })
+        .write(" -> ", { color: "grey", inline: true })
+        .write(choice);
+    });
+    this.lineFeed().write(`${normalizedMessage}: `, inline);
+    return new Promise((resolve) => {
+      this.rl.once("line", (line) => {
+        const choiceIndex = parseInt(line.trim(), 10) - 1;
+        if (choiceIndex >= 0 && choiceIndex < choices.length) {
+          resolve(choices[choiceIndex]!);
+        } else {
+          this.write("Invalid option selected.", { color: "red" });
+          resolve(this.choose(message, choices));
+        }
+      });
+    });
+  }
+
+  menu = async (title: string, options: MenuOptions): Promise<void> => {
+    this._ensureNotDisposed();
+    let exit = false;
+    while (!exit) {
+      const { action, type } = await this._menu(title, options);
+      await action();
+      exit = type === ActionType.GoBack || type === ActionType.Exit;
     }
-    this.lineFeed().write("Select an option: ", true);
+  }
+
+  private async _menu(title: string, options: MenuOptions): Promise<MenuOption> {
+    this._ensureNotDisposed();
+    const separatorLine = "-".repeat(title.length + 2);
+    this.lineFeed().write(separatorLine).write(` ${title} `).write(separatorLine);
+    for (const [key, option] of Object.entries(options)) {
+      const color = option.type === ActionType.Exit ? "red" : key === "0" ? "grey" : undefined;
+      this.write(key, { color: color || "cyan", inline: true })
+        .write(" -> ", { color: "grey", inline: true })
+        .write(option.name, { color: color });
+    }
+    this.lineFeed().write("Select an option: ", inline);
     return new Promise((resolve) => {
       this.rl.once("line", (line) => {
         const choice = line.trim();
         if (options.hasOwnProperty(choice)) {
           resolve(options[choice]!);
         } else {
-          this.error("Invalid option selected.");
-          resolve(this.menu(message, options));
+          this.write("Invalid option selected.", { color: "red" });
+          resolve(this._menu(title, options));
         }
       });
     });
-  };
-
-  private _write = (data: string | object, colorCode?: string, preventNewline?: boolean): void => {
-    if (typeof data !== "string") data = JSON.stringify(data);
-    if (colorCode) data = `${colorCode}${data}${this.NC}`;
-    if (!preventNewline) data += "\n";
-    process.stdout.write(data);
   };
 
   private _ensureNotDisposed(): void {
     if (this.disposed) {
       throw new Error("UserInterface has been disposed.");
     }
+  }
+
+  private _normalizePromptMessage(message: string): string {
+    return message.replace(/[:\s]+$/, "");
   }
 }

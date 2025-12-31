@@ -25,8 +25,8 @@ A command-line tool for tracking income and expenses for 1099 employees to simpl
 
 ### Configuration
 
-- Support the user being able to manage income categories
-- Support the user being able to manage expense categories
+- ~~Support the user being able to manage income categories~~
+- ~~Support the user being able to manage expense categories~~
 - Support the user being able to manage tax rate
 - Support the user being able to manage retirement rate
 

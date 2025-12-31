@@ -1,52 +1,83 @@
 import fs from "fs";
-import { Category, Entry, EntryType, BaseModel } from "./models.js";
+import { Settings, Entry, EntryType } from "./models.js";
 
-const CATEGORY_DATA_PATH = "./categories.json";
-const ENTRY_DATA_PATH = "./entries.json";
+const SETTINGS_DATA_PATH = "./src/data/settings.json";
+const ENTRY_DATA_PATH = "./src/data/entries.json";
 
-export class Repo {
-  private categories: Category[] = [];
+let repo: Repo | null = null;
+export function getRepo(): Repo {
+  if (!repo) {
+    repo = new Repo();
+  }
+  return repo;
+}
+
+class Repo {
+  private settings: Settings = { categories: { income: [], expense: [] }, rates: { tax: 0, ira: 0 } };
   private entries: Entry[] = [];
 
   constructor() {
-    this.categories = this._load<Category>(CATEGORY_DATA_PATH);
-    this.entries = this._load<Entry>(ENTRY_DATA_PATH);
+    this.settings = this._loadSettings();
+    this.entries = this._loadEntries();
   }
 
-  getCategories(type?: EntryType): Category[] {
-    return type ? this.categories.filter((cat) => cat.type === type) : this.categories;
+  // Settings Methods
+
+  getCategories(type: EntryType): string[] {
+    return type === "Income" ? this.settings.categories.income : this.settings.categories.expense;
+  }
+  
+  addCategory(type: EntryType, category: string): void {
+    const categories = this.getCategories(type);
+    if (categories.includes(category)) {
+      throw new Error(`${type} category "${category}" already exists.`);
+    }
+    categories.push(category);
+    this._saveSettings();
   }
 
-  addCategory(category: Category): void {
-    if (this.categories.find((cat) => cat.name === category.name && cat.type === category.type)) {
-      throw new Error(`${category.type} category "${category.name}" already exists.`);
+  removeCategory(type: EntryType, category: string): void {
+    const categories = this.getCategories(type);
+    const index = categories.indexOf(category);
+    if (index === -1) {
+      throw new Error(`${type} category "${category}" not found.`);
     }
-    this.categories = [...this.categories, category].sort(this._byTypeAndName);
-    this._save<Category>(CATEGORY_DATA_PATH, this.categories);
+    categories.splice(index, 1);
+    this._saveSettings();
   }
 
-  deleteCategory(category: Category): void {
-    const newCategories = this.categories.filter((cat) => !(cat.name === category.name && cat.type === category.type));
-    if (newCategories.length === this.categories.length) {
-      throw new Error(`${category.type} category "${category.name}" not found.`);
+  updateCategory(type: EntryType, oldCategory: string, newCategory: string): void {
+    const categories = this.getCategories(type);
+    const index = categories.indexOf(oldCategory);
+    if (index === -1) {
+      throw new Error(`${type} category "${oldCategory}" not found.`);
     }
-    this.categories = newCategories.sort(this._byTypeAndName);
-    this._save<Category>(CATEGORY_DATA_PATH, this.categories);
+    if (categories.includes(newCategory)) {
+      throw new Error(`${type} category "${newCategory}" already exists.`);
+    }
+    categories[index] = newCategory;
+    this._saveSettings();
   }
 
-  updateCategory(oldCategory: Category, newCategory: Category): void {
-    if (!this.categories.find((cat) => cat.name === oldCategory.name && cat.type === oldCategory.type)) {
-      throw new Error(`${oldCategory.type} category "${oldCategory.name}" not found.`);
-    }
-    if (this.categories.find((cat) => cat.name === newCategory.name && cat.type === newCategory.type)) {
-      throw new Error(`${newCategory.type} category "${newCategory.name}" already exists.`);
-    }
-    this.categories = [
-      ...this.categories.filter((cat) => !(cat.name === oldCategory.name && cat.type === oldCategory.type)),
-      newCategory,
-    ].sort(this._byTypeAndName);
-    this._save<Category>(CATEGORY_DATA_PATH, this.categories);
+  private _saveSettings(): void {
+    this.settings.categories.income.sort();
+    this.settings.categories.expense.sort();
+    fs.writeFileSync(SETTINGS_DATA_PATH, JSON.stringify(this.settings, null, 2));
   }
+
+  private _loadSettings(): Settings {
+    if (!fs.existsSync(SETTINGS_DATA_PATH)) {
+      fs.writeFileSync(SETTINGS_DATA_PATH, JSON.stringify(this.settings, null, 2));
+    }
+    const dataJson = fs.readFileSync(SETTINGS_DATA_PATH, "utf-8");
+    const data: unknown = JSON.parse(dataJson);
+    if (typeof data !== "object" || data === null || !("categories" in data) || !("rates" in data)) {
+      throw new Error(`${SETTINGS_DATA_PATH}: settings data is corrupt!`);
+    }
+    return data as Settings;
+  }
+
+  // Entry Methods
 
   getEntries(type?: EntryType): Entry[] {
     return type ? this.entries.filter((entry) => entry.type === type) : this.entries;
@@ -54,7 +85,7 @@ export class Repo {
 
   addEntry(entry: Entry): void {
     this.entries.push(entry);
-    this._save<Entry>(ENTRY_DATA_PATH, this.entries);
+    this._saveEntries();
   }
 
   updateEntry(entry: Entry): void {
@@ -63,34 +94,27 @@ export class Repo {
       throw new Error(`Entry with id "${entry.id}" not found.`);
     }
     this.entries[index] = entry;
-    this._save<Entry>(ENTRY_DATA_PATH, this.entries);
+    this._saveEntries();
   }
 
   deleteEntry(id: string): void {
     this.entries = this.entries.filter((entry) => entry.id !== id);
-    this._save<Entry>(ENTRY_DATA_PATH, this.entries);
+    this._saveEntries();
   }
 
-  private _save<T extends BaseModel>(path: string, data: T[]): void {
-    fs.writeFileSync(path, JSON.stringify(data, null, 2));
+  private _saveEntries(): void {
+    fs.writeFileSync(ENTRY_DATA_PATH, JSON.stringify(this.entries, null, 2));
   }
 
-  private _load<T extends BaseModel>(path: string): T[] {
-    if (!fs.existsSync(path)) {
-      fs.writeFileSync(path, JSON.stringify([], null, 2));
+  private _loadEntries(): Entry[] {
+    if (!fs.existsSync(ENTRY_DATA_PATH)) {
+      fs.writeFileSync(ENTRY_DATA_PATH, JSON.stringify([], null, 2));
     }
-    const dataJson = fs.readFileSync(path, "utf-8");
+    const dataJson = fs.readFileSync(ENTRY_DATA_PATH, "utf-8");
     const data: unknown = JSON.parse(dataJson);
     if (!Array.isArray(data)) {
-      throw new Error(`${path}: data is corrupt!`);
+      throw new Error(`${ENTRY_DATA_PATH}: entries data is corrupt!`);
     }
-    return data as T[];
-  }
-
-  private _byTypeAndName(this: void, a: Category, b: Category): number {
-    if (a.type === b.type) {
-      return a.name.localeCompare(b.name);
-    }
-    return a.type.localeCompare(b.type);
+    return data as Entry[];
   }
 }

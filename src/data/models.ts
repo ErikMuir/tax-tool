@@ -1,13 +1,17 @@
 export type EntryType = "Income" | "Expense";
 
-export type BaseModel = object;
-
-export type Category = BaseModel & {
-  type: EntryType;
-  name: string;
+export type Settings = {
+  categories: {
+    income: string[];
+    expense: string[];
+  };
+  rates: { // expressed as percentages (e.g., 25 for 25%)
+    tax: number;
+    ira: number;
+  };
 };
 
-export type Entry = BaseModel & {
+export type Entry = {
   id: string; // UUID
   date: string; // ISO date string
   type: EntryType;

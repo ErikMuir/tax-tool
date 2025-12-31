@@ -1,0 +1,19 @@
+{
+  "categories": {
+    "income": [
+      "Affton Christian Church",
+      "McLean Forrester",
+      "Salem United Methodist",
+      "The Muny"
+    ],
+    "expense": [
+      "Business Operating Expenses",
+      "Home Office Supplies",
+      "Miscellaneous"
+    ]
+  },
+  "rates": {
+    "tax": 0,
+    "ira": 0
+  }
+}
