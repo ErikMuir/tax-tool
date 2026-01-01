@@ -1,8 +1,9 @@
 import { getUserInterface } from "../utils/user-interface.js";
 import { ActionType, MenuOptions, noOp, notImplemented, quickExit } from "./shared.js";
 
-export async function reportsMenu() {
+export async function reportsMenu(stack: string[]): Promise<void> {
   const ui = getUserInterface();
+  const newStack = [...stack, "Reports"];
   const options: MenuOptions = {
     "0": { name: "Back", action: noOp, type: ActionType.GoBack },
     "1": { name: "Current Quarter", action: currentQuarterReport, type: ActionType.Stay },
@@ -11,7 +12,7 @@ export async function reportsMenu() {
     "4": { name: "Specific Year", action: specificYearReport, type: ActionType.Stay },
     "q": { name: "Quit", action: quickExit, type: ActionType.Exit },
   };
-  await ui.menu("Reports Menu", options);
+  await ui.menu(newStack, options);
 }
 
 async function currentQuarterReport(): Promise<void> {

@@ -2,8 +2,9 @@ import { getUserInterface } from "../utils/user-interface.js";
 import { ActionType, MenuOptions } from "./shared.js";
 import { noOp, notImplemented, quickExit } from "./shared.js";
 
-export async function ledgerMenu() {
+export async function ledgerMenu(stack: string[]): Promise<void> {
   const ui = getUserInterface();
+  const newStack = [...stack, "Ledger"];
   const options: MenuOptions = {
     "0": { name: "Back", action: noOp, type: ActionType.GoBack },
     "1": { name: "Add", action: addEntry, type: ActionType.Stay },
@@ -11,7 +12,7 @@ export async function ledgerMenu() {
     "3": { name: "Delete", action: deleteEntry, type: ActionType.Stay },
     "q": { name: "Quit", action: quickExit, type: ActionType.Exit },
   };
-  await ui.menu("Ledger Menu", options);
+  await ui.menu(newStack, options);
 }
 
 async function addEntry(): Promise<void> {

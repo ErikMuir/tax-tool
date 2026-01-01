@@ -139,8 +139,9 @@ class UserInterface {
     });
   }
 
-  menu = async (title: string, options: MenuOptions): Promise<void> => {
+  menu = async (stack: string[], options: MenuOptions): Promise<void> => {
     this._ensureNotDisposed();
+    const title = stack.length > 0 ? stack.join(" > ") : "Menu";
     let exit = false;
     while (!exit) {
       const { action, type } = await this._menu(title, options);

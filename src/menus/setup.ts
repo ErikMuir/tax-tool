@@ -3,16 +3,17 @@ import { getUserInterface } from "../utils/user-interface.js";
 import { categoriesMenu } from "./categories.js";
 import { ActionType, getPercentageInput, MenuOptions, noOp, quickExit } from "./shared.js";
 
-export async function setupMenu(): Promise<void> {
+export async function setupMenu(stack: string[]): Promise<void> {
   const ui = getUserInterface();
+  const newStack = [...stack, "Setup"];
   const options: MenuOptions = {
     "0": { name: "Back", action: noOp, type: ActionType.GoBack },
-    "1": { name: "Categories", action: categoriesMenu, type: ActionType.Stay },
+    "1": { name: "Categories", action: () => categoriesMenu(newStack), type: ActionType.Stay },
     "2": { name: "Tax Rate", action: taxRate, type: ActionType.Stay },
     "3": { name: "Retirement", action: retirementRate, type: ActionType.Stay },
     "q": { name: "Quit", action: quickExit, type: ActionType.Exit },
   };
-  await ui.menu("Setup Menu", options);
+  await ui.menu(newStack, options);
 }
 
 async function taxRate(): Promise<void> {

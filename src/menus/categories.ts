@@ -3,22 +3,21 @@ import { getRepo } from "../data/repo.js";
 import { getUserInterface } from "../utils/user-interface.js";
 import { MenuOptions, noOp, ActionType, quickExit } from "./shared.js";
 
-export async function categoriesMenu(categoryType?: EntryType): Promise<void> {
+export async function categoriesMenu(stack: string[], categoryType?: EntryType): Promise<void> {
   const ui = getUserInterface();
   const options: MenuOptions = {};
-  let title = "Categories";
+  const newStack = [...stack, categoryType || "Categories"];
+  options["0"] = { name: "Back", action: noOp, type: ActionType.GoBack };
   if (!categoryType) {
-    options["1"] = { name: "Income", action: async () => categoriesMenu("Income"), type: ActionType.GoBack };
-    options["2"] = { name: "Expense", action: async () => categoriesMenu("Expense"), type: ActionType.GoBack };
+    options["1"] = { name: "Income", action: async () => categoriesMenu(newStack, "Income"), type: ActionType.Stay };
+    options["2"] = { name: "Expense", action: async () => categoriesMenu(newStack, "Expense"), type: ActionType.Stay };
   } else {
-    title = `${categoryType} Categories`;
-    options["0"] = { name: "Back", action: noOp, type: ActionType.GoBack };
-    options["1"] = { name: "List", action: () => listCategories(categoryType), type: ActionType.Stay };
-    options["2"] = { name: "Add", action: () => addCategory(categoryType), type: ActionType.Stay };
-    options["3"] = { name: "Remove", action: () => removeCategory(categoryType), type: ActionType.Stay };
-    options["q"] = { name: "Quit", action: quickExit, type: ActionType.Exit };
+    options["1"] = { name: "List", action: async () => listCategories(categoryType), type: ActionType.Stay };
+    options["2"] = { name: "Add", action: async () => addCategory(categoryType), type: ActionType.Stay };
+    options["3"] = { name: "Remove", action: async () => removeCategory(categoryType, newStack), type: ActionType.Stay };
   }
-  await ui.menu(title, options);
+  options["q"] = { name: "Quit", action: quickExit, type: ActionType.Exit };
+  await ui.menu(newStack, options);
 }
 
 async function listCategories(categoryType: EntryType): Promise<void> {
@@ -42,8 +41,9 @@ async function addCategory(categoryType: EntryType): Promise<void> {
   await ui.continue();
 }
 
-async function removeCategory(categoryType: EntryType): Promise<void> {
+async function removeCategory(categoryType: EntryType, stack: string[]): Promise<void> {
   const ui = getUserInterface();
+  const newStack = [...stack, "Remove"];
   const repo = getRepo();
   const categories = repo.getCategories(categoryType);
   if (categories.length === 0) {
@@ -63,5 +63,5 @@ async function removeCategory(categoryType: EntryType): Promise<void> {
       type: ActionType.GoBack,
     };
   });
-  await ui.menu(`Delete ${categoryType} Category`, options);
+  await ui.menu(newStack, options);
 }

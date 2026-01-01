@@ -22,7 +22,7 @@ A command-line tool for tracking income and expenses for 1099 employees to simpl
 - ~~Add support for user confirmations~~
 - ~~Add support for user inputs~~
 - ~~Add support for menus~~
-- Breadcrumb menu titles
+- ~~Breadcrumb menu titles~~
 
 ### Configuration
 
