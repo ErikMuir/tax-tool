@@ -59,6 +59,30 @@ class Repo {
     this._saveSettings();
   }
 
+  getTaxRate(): number {
+    return this.settings.rates.tax;
+  }
+
+  setTaxRate(rate: number): void {
+    if (rate < 0 || rate > 100) {
+      throw new Error(`Tax rate must be between 0 and 100. Given: ${rate}`);
+    }
+    this.settings.rates.tax = rate;
+    this._saveSettings();
+  }
+
+  getRetirementRate(): number {
+    return this.settings.rates.ira;
+  }
+
+  setRetirementRate(rate: number): void {
+    if (rate < 0 || rate > 100) {
+      throw new Error(`Retirement rate must be between 0 and 100. Given: ${rate}`);
+    }
+    this.settings.rates.ira = rate;
+    this._saveSettings();
+  }
+
   private _saveSettings(): void {
     this.settings.categories.income.sort();
     this.settings.categories.expense.sort();
