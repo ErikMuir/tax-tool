@@ -1,5 +1,26 @@
 import fs from "fs";
-import { Settings, Entry, EntryType } from "./models.js";
+
+export type EntryType = "Income" | "Expense";
+
+export type Settings = {
+  categories: {
+    income: string[];
+    expense: string[];
+  };
+  rates: { // expressed as percentages (e.g., 25 for 25%)
+    tax: number;
+    ira: number;
+  };
+};
+
+export type Entry = {
+  date: string; // YYYY-MM-DD
+  type: EntryType;
+  category: string;
+  amount: number; // in dollars
+  notes?: string | undefined;
+  created: string; // ISO datetime string
+};
 
 const SETTINGS_DATA_PATH = "./src/data/settings.json";
 const ENTRY_DATA_PATH = "./src/data/entries.json";
@@ -26,7 +47,7 @@ class Repo {
   getCategories(type: EntryType): string[] {
     return type === "Income" ? this.settings.categories.income : this.settings.categories.expense;
   }
-  
+
   addCategory(type: EntryType, category: string): void {
     const categories = this.getCategories(type);
     if (categories.includes(category)) {
@@ -46,6 +67,7 @@ class Repo {
     this._saveSettings();
   }
 
+  // currently not being used
   updateCategory(type: EntryType, oldCategory: string, newCategory: string): void {
     const categories = this.getCategories(type);
     const index = categories.indexOf(oldCategory);
@@ -84,8 +106,6 @@ class Repo {
   }
 
   private _saveSettings(): void {
-    this.settings.categories.income.sort();
-    this.settings.categories.expense.sort();
     fs.writeFileSync(SETTINGS_DATA_PATH, JSON.stringify(this.settings, null, 2));
   }
 
@@ -112,17 +132,19 @@ class Repo {
     this._saveEntries();
   }
 
+  // currently not being used
   updateEntry(entry: Entry): void {
-    const index = this.entries.findIndex((e) => e.id === entry.id);
+    const index = this.entries.findIndex((e) => e.created === entry.created);
     if (index === -1) {
-      throw new Error(`Entry with id "${entry.id}" not found.`);
+      throw new Error("Entry not found.");
     }
     this.entries[index] = entry;
     this._saveEntries();
   }
 
-  deleteEntry(id: string): void {
-    this.entries = this.entries.filter((entry) => entry.id !== id);
+  // currently not being used
+  deleteEntry(created: string): void {
+    this.entries = this.entries.filter((entry) => entry.created !== created);
     this._saveEntries();
   }
 

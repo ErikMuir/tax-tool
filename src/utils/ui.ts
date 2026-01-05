@@ -1,7 +1,34 @@
 import * as readline from "readline";
-import { ActionType, MenuOption, MenuOptions } from "../menus/shared.js";
 
 export type Color = "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "grey";
+
+export type MenuAction = () => Promise<void>;
+
+export enum ActionType { Stay, GoBack, Exit }
+
+export type MenuOption = {
+  name: string;
+  action: MenuAction;
+  type: ActionType;
+};
+
+export type MenuOptions = Record<string, MenuOption>;
+
+export type VerticalBorderChar = "|" | "*" | "#" | ":";
+
+export type HorizontalBorderChar = "-" | "=" | "~" | "*" | "#";
+
+export type BannerConfig = {
+  color?: Color | undefined;
+  borderColor?: Color | undefined;
+  verticalBorderChar?: VerticalBorderChar | undefined;
+  horizontalBorderChar?: HorizontalBorderChar | undefined;
+};
+
+export type WriteOptions = {
+  color?: Color | undefined;
+  inline?: boolean | undefined;
+};
 
 export const ColorCodes: Record<Color, string> = {
   red: "\x1b[31m",
@@ -14,15 +41,10 @@ export const ColorCodes: Record<Color, string> = {
   grey: "\x1b[90m",
 };
 
-export type WriteOptions = {
-  color?: Color | undefined;
-  inline?: boolean | undefined;
-};
-
 export const inline: WriteOptions = { inline: true };
 
 let userInterface: UserInterface | null = null;
-export function getUserInterface(): UserInterface {
+export function getUI(): UserInterface {
   if (!userInterface) {
     userInterface = new UserInterface();
   }
@@ -53,6 +75,11 @@ class UserInterface {
     if (!options.inline) data += "\n";
     process.stdout.write(data);
     return this;
+  }
+
+  writeIf = (condition: boolean, data: string | object, options: WriteOptions = {}): UserInterface => {
+    if (!condition) return this;
+    return this.write(data, options);
   }
 
   info = (data: string | object, inline?: boolean): UserInterface => {
@@ -120,12 +147,11 @@ class UserInterface {
     const normalizedMessage = this._normalizePromptMessage(message);
     choices.forEach((choice, index) => {
       this
-        .lineFeed()
-        .write(`  ${index + 1}`, { color: "cyan", inline: true })
+        .write(`${index + 1}`, { color: "cyan", inline: true })
         .write(" -> ", { color: "grey", inline: true })
         .write(choice);
     });
-    this.lineFeed().write(`${normalizedMessage}: `, inline);
+    this.write(`${normalizedMessage}: `, inline);
     return new Promise((resolve) => {
       this.rl.once("line", (line) => {
         const choiceIndex = parseInt(line.trim(), 10) - 1;
@@ -137,23 +163,57 @@ class UserInterface {
         }
       });
     });
-  }
+  };
 
-  menu = async (stack: string[], options: MenuOptions): Promise<void> => {
+  bannerOld = (message: string, config: BannerConfig = {}): void => {
+    const color = config.color;
+    const borderColor = config.borderColor || color;
+    const hChar = config.horizontalBorderChar || "-";
+    const vChar = config.verticalBorderChar || "";
+    const hBorder = hChar.repeat(message.length + 2 + (vChar.length * 2));
+    this.lineFeed()
+      .write(hBorder, { color: borderColor })
+      .write(vChar, { color: borderColor, inline: true })
+      .write(` ${message} `, { color: color, inline: true })
+      .write(vChar, { color: borderColor })
+      .write(hBorder, { color: borderColor });
+  };
+
+  banner = (stack: string[], config: BannerConfig = {}): void => {
+    const color = config.color;
+    const borderColor = config.borderColor || color;
+    const hChar = config.horizontalBorderChar || "-";
+    const vChar = config.verticalBorderChar || "";
+    const message = stack.length > 0 ? stack.join(" > ") : "";
+    const hBorder = hChar.repeat(message.length + 2 + (vChar.length * 2));
+    this.lineFeed()
+      .write(hBorder, { color: borderColor })
+      .write(vChar, { color: borderColor, inline: true })
+      .write(" ", inline);
+    stack.forEach((part, index) => {
+      const color = index === stack.length - 1 ? config.color : "grey";
+      const inline = true;
+      this.write(part, { color, inline })
+        .writeIf(index < stack.length - 1, " > ", { color: "cyan", inline });
+    });
+    this.write(" ", inline)
+      .write(vChar, { color: borderColor })
+      .write(hBorder, { color: borderColor });
+  };
+
+  menu = async (stack: string[], options: MenuOptions, config?: BannerConfig): Promise<void> => {
     this._ensureNotDisposed();
-    const title = stack.length > 0 ? stack.join(" > ") : "Menu";
     let exit = false;
     while (!exit) {
-      const { action, type } = await this._menu(title, options);
+      const { action, type } = await this._menu(stack, options, config);
       await action();
       exit = type === ActionType.GoBack || type === ActionType.Exit;
     }
-  }
+  };
 
-  private async _menu(title: string, options: MenuOptions): Promise<MenuOption> {
+  private async _menu(stack: string[], options: MenuOptions, config?: BannerConfig): Promise<MenuOption> {
     this._ensureNotDisposed();
-    const separatorLine = "-".repeat(title.length + 2);
-    this.lineFeed().write(separatorLine).write(` ${title} `).write(separatorLine);
+    this.banner(stack, config);
     for (const [key, option] of Object.entries(options)) {
       const color = option.type === ActionType.Exit ? "red" : key === "0" ? "grey" : undefined;
       this.write(key, { color: color || "cyan", inline: true })
@@ -168,7 +228,7 @@ class UserInterface {
           resolve(options[choice]!);
         } else {
           this.write("Invalid option selected.", { color: "red" });
-          resolve(this._menu(title, options));
+          resolve(this._menu(stack, options, config));
         }
       });
     });

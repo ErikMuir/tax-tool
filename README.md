@@ -33,8 +33,8 @@ A command-line tool for tracking income and expenses for 1099 employees to simpl
 
 ### Line Item Entry
 
-- Support the user being able to add income line items
-- Support the user being able to add expense line items
+- ~~Support the user being able to add income line items~~
+- ~~Support the user being able to add expense line items~~
 
 ### Reports
 

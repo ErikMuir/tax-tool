@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "type": "Income",
+    "category": "McLean Forrester",
+    "date": "2026-01-04",
+    "amount": 0,
+    "created": "2026-01-04T22:23:05.641Z"
+  }
+]

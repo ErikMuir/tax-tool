@@ -1,8 +1,8 @@
 {
   "categories": {
     "income": [
-      "Affton Christian Church",
       "McLean Forrester",
+      "Affton Christian Church",
       "Salem United Methodist",
       "The Muny"
     ],
@@ -13,7 +13,7 @@
     ]
   },
   "rates": {
-    "tax": 25,
+    "tax": 35,
     "ira": 10
   }
 }
